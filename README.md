@@ -1,1 +1,2 @@
 # ML-PredictDB
+In this study we sought to optimize gene expression imputation performance across global populations in comparison to the popular transcriptome tool [PrediXcan](https://github.com/WheelerLab/PrediXcan). Specifically, we used non-linear machine learning (ML) models viz; random forest (RF), support vector regression (SVR), and K nearest neighbor (KNN) to build transcriptome imputation models, and evaluated their performance in comparison to elastic net (EN) - the algorithm used in [PrediXcan](https://github.com/WheelerLab/PrediXcan).
