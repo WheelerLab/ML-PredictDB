@@ -17,3 +17,8 @@ There are two categories of models - elastic net (EN) and non-linear machine lea
  
 ### Notes for the Non-Linear Machine Learning Models
 ##### Softwares
+Prerequisite packages and libraries
+  * Python 3
+  * Sci-Kit Learn
+  * Pandas
+  * Numpy
