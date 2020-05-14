@@ -4,4 +4,6 @@ In this study we sought to optimize protein coding gene expression imputation pe
 # Model Training and Testing
 The model training and testing were done in two separate parts. Firstly, the elastic net (EN) models were trained and tested as described in [Mogil et al., 2018](https://github.com/WheelerLab/DivPop).
 The non-linear machine learning (ML) models were built and tested as described below:
-  1. We first used the 00_gridsearch.py script to carry out a gridsearch through each ML algorithm hyperparameters in order to determine the hyperparameter values or combination of values that yields the optimum five-fold cross-validated imputation performance (R<sup>2</sup>) for each gene. The optimum hyperparameter values and (R<sup>2</sup>) for each gene across training population and ML algorithm.
+  1. We first used the 00_gridsearch.py script to carry out a gridsearch through each ML algorithm hyperparameters in order to determine the hyperparameter values or combination of values that yields the optimum five-fold cross-validated imputation performance (R<sup>2</sup>) for each gene. The files containing the optimum hyperparameter values and (R<sup>2</sup>) for each gene across training population are KNN_optimum_hyperparameter.txt
+SVR_optimum_hyperparameter.txt
+RF_optimum_hyperparameter.txt.
