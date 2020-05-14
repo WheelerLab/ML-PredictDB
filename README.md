@@ -12,4 +12,8 @@ The model training and testing were done in two separate parts. Firstly, the ela
 ***
 There are two categories of models - elastic net (EN) and non-linear machine learning (ML) models - generated from this study that can be used to predict expression in a new test set. 
  * If you are interested in using the models built with EN, then you can access the models at [PredictDB](http://predictdb.org/) and run prediction with the instructions stated [here](https://github.com/WheelerLab/PrediXcan/tree/master/Software). 
- * Now, if you want to use the non-linear machine learning model with the MESA training data as used in this study, you will use the 00_gridsearch_model.py and 01_model_testing_in_METS.py scripts. To use these scripts.
+ * Now, if you want to use the non-linear machine learning model with the MESA training data as used in this study, you will use the optimum hyperparameter files KNN_optimum_hyperparameter.txt, SVR_optimum_hyperparameter.txt, and RF_optimum_hyperparameter.txt, and the 01_model_testing_in_METS.py scripts. To use these scripts, you will have to change the paths hardcoded in the scripts to the path containing the MESA training data and your test dataset as well as the output path.
+ * If you want to use your own training data and testing data, then you can use both 00_gridsearch_model.py and 01_model_testing_in_METS.py scripts. Note to change the paths hardcoded in the scripts to the path containing your training data and your test dataset as well as the output path.
+ 
+### Notes for the Non-Linear Machine Learning Models
+##### Softwares
