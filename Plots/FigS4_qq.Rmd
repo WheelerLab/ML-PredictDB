@@ -1,0 +1,33 @@
+---
+title: "FigS4_qq"
+author: "Paul Okoro"
+date: "April 15, 2020"
+output: html_document
+---
+
+```{r, fig.width=16,fig.height=16}
+library(dplyr)
+library(ggplot2)
+library(viridis)
+library(data.table)
+
+data <- fread(file="Z:/ml_paper_figs/qq_input_ALL.txt", header = T, stringsAsFactors = F)
+#rearrange and ML order
+data <- mutate(data,model=factor(model,levels=c("Elastic Net","Random Forest","Support Vector","K Nearest Neighbor")))
+
+fig <- ggplot(data,aes(x=Expected,y=Observed)) + geom_point(shape=1) + theme_classic(16) + 
+  scale_colour_manual(values=c(rgb(163,0,66,maxColorValue = 255),"dark gray")) + 
+  theme(legend.position = c(0.01,0.99),legend.justification = c(0,1)) + 
+  geom_abline(slope=1,intercept = 0, colour="red") + 
+  xlab(expression(Expected~~-log[10](italic(p)))) + 
+  ylab(expression(Observed~~-log[10](italic(p)))) +
+  expand_limits(x = 0, y = 0) + scale_y_continuous(breaks = seq(0,14,2), limits = c(0,14)) + facet_wrap(~model)
+
+print(fig)
+
+tiff("/Users/okoro/OneDrive/Desktop/mesa_scripts/ml_paper_figs/FigS4.tiff", width = 16, height = 16, units = 'cm', res = 300, compression = 'lzw')
+fig
+dev.off()
+
+```
+
