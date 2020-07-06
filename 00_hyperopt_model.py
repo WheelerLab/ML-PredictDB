@@ -130,7 +130,7 @@ def objective(params):
     regressor_type = params["type"]
     del params["type"]
     if regressor_type == "en":
-        regressor = ElasticNet(random_state=1234, **params)
+        regressor = ElasticNet(max_iter=10000, random_state=1234, **params)
     elif regressor_type == "rf":
         regressor = RandomForestRegressor(random_state=1234, **params)
     elif regressor_type == "svm":
@@ -201,7 +201,7 @@ open("/home/pokoro/data/paper_hyperopt/"+pop+"_en_hyperopt_chr"+chrom+"_chunk"+
      chunk+".txt", "w").write("gene_id"+"\t"+"gene_name"+"\t"+"chr"+"\t"+
                               "best_hyperparam"+"\t")
 
-for i in range(1, max_eval, 1):
+for i in range(1, max_evals+1, 1):
      open("/home/pokoro/data/paper_hyperopt/"+pop+"_en_hyperopt_chr"+chrom+
           "_chunk"+chunk+".txt", "a").write(str(i)+"\t")
 """
@@ -210,7 +210,7 @@ open("/home/pokoro/data/paper_hyperopt/"+pop+"_rf_hyperopt_chr"+chrom+"_chunk"+
      chunk+".txt", "w").write("gene_id"+"\t"+"gene_name"+"\t"+"chr"+"\t"+
                               "best_hyperparam"+"\t")
 
-for i in range(1, max_eval, 1):
+for i in range(1, max_evals+1, 1):
      open("/home/pokoro/data/paper_hyperopt/"+pop+"_rf_hyperopt_chr"+chrom+
           "_chunk"+chunk+".txt", "a").write(str(i)+"\t")
 
@@ -219,7 +219,7 @@ open("/home/pokoro/data/paper_hyperopt/"+pop+"_svr_hyperopt_chr"+chrom+"_chunk"+
      chunk+".txt", "w").write("gene_id"+"\t"+"gene_name"+"\t"+"chr"+"\t"+
                               "best_hyperparam"+"\t")
 
-for i in range(1, max_eval, 1):
+for i in range(1, max_evals+1, 1):
      open("/home/pokoro/data/paper_hyperopt/"+pop+"_svr_hyperopt_chr"+chrom+
           "_chunk"+chunk+".txt", "a").write(str(i)+"\t")
 
@@ -228,7 +228,7 @@ open("/home/pokoro/data/paper_hyperopt/"+pop+"_knn_hyperopt_chr"+chrom+"_chunk"+
      chunk+".txt", "w").write("gene_id"+"\t"+"gene_name"+"\t"+"chr"+"\t"+
                               "best_hyperparam"+"\t")
 
-for i in range(1, max_eval, 1):
+for i in range(1, max_evals+1, 1):
      open("/home/pokoro/data/paper_hyperopt/"+pop+"_knn_hyperopt_chr"+chrom+
           "_chunk"+chunk+".txt", "a").write(str(i)+"\t")
 """
@@ -263,13 +263,11 @@ for gene in genes:
          best_hyperparam.pop("type") #just to remove "type" from the param dict
          
          open("/home/pokoro/data/paper_hyperopt/"+pop+"_en_hyperopt_chr"+
-              chrom+"_chunk"+chunk+".txt", "a").
-         write("\n"+gene+"\t"+gene_name+"\t"+chrom+"\t"+str(best_hyperparam)+"\t")
+              chrom+"_chunk"+chunk+".txt", "a").write("\n"+gene+"\t"+gene_name+"\t"+chrom+"\t"+str(best_hyperparam)+"\t")
 
-         for i in range(1, max_eval, 1):
+         for i in range(1, max_evals+1, 1): #I negate the loss in order to get cvR2
               open("/home/pokoro/data/paper_hyperopt/"+pop+"_en_hyperopt_chr"+
-                   chrom+"_chunk"+chunk+".txt", "a").
-              write(str(-1*table.loss[i])+"\t")
+                   chrom+"_chunk"+chunk+".txt", "a").write(str(-1*result_table.loss[i])+"\t")
 
 """
          #Random Forest
