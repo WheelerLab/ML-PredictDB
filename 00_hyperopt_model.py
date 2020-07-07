@@ -201,16 +201,16 @@ open("/home/pokoro/data/paper_hyperopt/"+pop+"_en_hyperopt_chr"+chrom+"_chunk"+
      chunk+".txt", "w").write("gene_id"+"\t"+"gene_name"+"\t"+"chr"+"\t"+
                               "best_hyperparam"+"\t")
 
-for i in range(1, max_evals+1, 1):
+for i in range(0, max_evals, 1):
      open("/home/pokoro/data/paper_hyperopt/"+pop+"_en_hyperopt_chr"+chrom+
           "_chunk"+chunk+".txt", "a").write(str(i)+"\t")
-"""
+
 #rf
 open("/home/pokoro/data/paper_hyperopt/"+pop+"_rf_hyperopt_chr"+chrom+"_chunk"+
      chunk+".txt", "w").write("gene_id"+"\t"+"gene_name"+"\t"+"chr"+"\t"+
                               "best_hyperparam"+"\t")
 
-for i in range(1, max_evals+1, 1):
+for i in range(0, max_evals, 1):
      open("/home/pokoro/data/paper_hyperopt/"+pop+"_rf_hyperopt_chr"+chrom+
           "_chunk"+chunk+".txt", "a").write(str(i)+"\t")
 
@@ -219,7 +219,7 @@ open("/home/pokoro/data/paper_hyperopt/"+pop+"_svr_hyperopt_chr"+chrom+"_chunk"+
      chunk+".txt", "w").write("gene_id"+"\t"+"gene_name"+"\t"+"chr"+"\t"+
                               "best_hyperparam"+"\t")
 
-for i in range(1, max_evals+1, 1):
+for i in range(0, max_evals, 1):
      open("/home/pokoro/data/paper_hyperopt/"+pop+"_svr_hyperopt_chr"+chrom+
           "_chunk"+chunk+".txt", "a").write(str(i)+"\t")
 
@@ -228,10 +228,10 @@ open("/home/pokoro/data/paper_hyperopt/"+pop+"_knn_hyperopt_chr"+chrom+"_chunk"+
      chunk+".txt", "w").write("gene_id"+"\t"+"gene_name"+"\t"+"chr"+"\t"+
                               "best_hyperparam"+"\t")
 
-for i in range(1, max_evals+1, 1):
+for i in range(0, max_evals, 1):
      open("/home/pokoro/data/paper_hyperopt/"+pop+"_knn_hyperopt_chr"+chrom+
           "_chunk"+chunk+".txt", "a").write(str(i)+"\t")
-"""
+
 
 
 
@@ -254,6 +254,7 @@ for gene in genes:
          y = adj_exp.ravel()
 
 
+
          #Elastic Net
          trials = Trials() #reset the trials object
          best = fmin(fn=objective, space=en_space, algo=algo,
@@ -265,67 +266,55 @@ for gene in genes:
          open("/home/pokoro/data/paper_hyperopt/"+pop+"_en_hyperopt_chr"+
               chrom+"_chunk"+chunk+".txt", "a").write("\n"+gene+"\t"+gene_name+"\t"+chrom+"\t"+str(best_hyperparam)+"\t")
 
-         for i in range(1, max_evals+1, 1): #I negate the loss in order to get cvR2
+         for i in range(0, max_evals, 1): #I negate the loss in order to get cvR2
               open("/home/pokoro/data/paper_hyperopt/"+pop+"_en_hyperopt_chr"+
                    chrom+"_chunk"+chunk+".txt", "a").write(str(-1*result_table.loss[i])+"\t")
 
-"""
+
          #Random Forest
-         rf_t0 = time.time()#do rf and time it
-         rfgs.fit(cis_gt, adj_exp.ravel())
-         rf_t1 = time.time()
-         rf_tt = str(float(rf_t1 - rf_t0))
-         rf_cv = str(rfgs.best_score_)
-         n = str(rfgs.best_params_["n_estimators"])
-
-         #extract mean R2 score per gene per parameter
-         cv = pd.DataFrame(rfgs.cv_results_)
-         open("/home/paul/mesa_models/python_ml_models/results/"+pop+"_rf_grid_chr"+chrom+
-              ".txt", "a").write("\n"+gene+"\t"+gene_name+"\t"+chrom+"\t")
-         for i in range(len(cv)):
-              open("/home/paul/mesa_models/python_ml_models/results/"+pop+"_rf_grid_chr"+chrom+
-                   ".txt", "a").write(str(cv.mean_test_score[i])+"\t")
-              
-              open("/home/paul/mesa_models/python_ml_models/results/"+pop+"_rf_grid_parameter_per_gene_chr"+chrom+
-                   ".txt", "a").write("\n"+str(cv.param_n_estimators[i])+
-                                      "\t"+gene+"\t"+gene_name+"\t"+chrom+"\t"+str(cv.mean_test_score[i])+"\t")
-
-          
+         trials = Trials() #reset the trials object
+         best = fmin(fn=objective, space=rf_space, algo=algo,
+                     max_evals=max_evals, trials=trials)
+         result_table = pd.DataFrame(trials.results)
+         best_hyperparam = hyperopt.space_eval(rf_space, best)
+         best_hyperparam.pop("type") #just to remove "type" from the param dict
          
-         #SVR
-         svr_t0 = time.time()
-         svrgs.fit(cis_gt, adj_exp.ravel())
-         svr_t1 = time.time()
-         svr_tt = str(float(svr_t1 - svr_t0))
-         svr_cv = str(svrgs.best_score_)
-         svr_kernel = str(svrgs.best_params_["kernel"])
-         svr_degree = str(svrgs.best_params_["degree"])
-         svr_c = str(svrgs.best_params_["C"])
-         open("/home/paul/mesa_models/python_ml_models/results/best_grid_svr_cv_chr"+chrom+
-              ".txt", "a").write(gene+"\t"+gene_name+"\t"+svr_cv+"\t"+svr_kernel+"\t"+svr_degree+"\t"+svr_c+"\t"+svr_tt+"\n")
+         open("/home/pokoro/data/paper_hyperopt/"+pop+"_rf_hyperopt_chr"+
+              chrom+"_chunk"+chunk+".txt", "a").write("\n"+gene+"\t"+gene_name+"\t"+chrom+"\t"+str(best_hyperparam)+"\t")
 
-         #extract mean R2 score per gene per parameter
-         cv = pd.DataFrame(svrgs.cv_results_)
-         for i in range(len(cv)):
-              open("/home/paul/mesa_models/python_ml_models/results/"+pop+"_svr_grid_parameter_per_gene_chr"+chrom+
-                   ".txt", "a").write("\n"+str(cv.params[i])+"\t"+gene+"\t"+gene_name+"\t"+chrom+"\t"+str(cv.mean_test_score[i])+"\t")
-              
-       
+         for i in range(0, max_evals, 1): #I negate the loss in order to get cvR2
+              open("/home/pokoro/data/paper_hyperopt/"+pop+"_rf_hyperopt_chr"+
+                   chrom+"_chunk"+chunk+".txt", "a").write(str(-1*result_table.loss[i])+"\t")
+
+                   
+         #Support Vector
+         trials = Trials() #reset the trials object
+         best = fmin(fn=objective, space=svm_space, algo=algo,
+                     max_evals=max_evals, trials=trials)
+         result_table = pd.DataFrame(trials.results)
+         best_hyperparam = hyperopt.space_eval(svm_space, best)
+         best_hyperparam.pop("type") #just to remove "type" from the param dict
+         
+         open("/home/pokoro/data/paper_hyperopt/"+pop+"_svr_hyperopt_chr"+
+              chrom+"_chunk"+chunk+".txt", "a").write("\n"+gene+"\t"+gene_name+"\t"+chrom+"\t"+str(best_hyperparam)+"\t")
+
+         for i in range(0, max_evals, 1): #I negate the loss in order to get cvR2
+              open("/home/pokoro/data/paper_hyperopt/"+pop+"_svr_hyperopt_chr"+
+                   chrom+"_chunk"+chunk+".txt", "a").write(str(-1*result_table.loss[i])+"\t")
+
+      
          #KNN
-         knn_t0 = time.time()
-         knngs.fit(cis_gt, adj_exp.ravel())
-         knn_t1 = time.time()
-         knn_tt = str(float(knn_t1 - knn_t0))
-         knn_cv = str(knngs.best_score_)
-         knn_n = str(knngs.best_params_["n_neighbors"])
-         knn_w = str(knngs.best_params_["weights"])
-         knn_p = str(knngs.best_params_["p"])
-         open("/home/paul/mesa_models/python_ml_models/results/best_grid_knn_cv_chr"+chrom+
-              ".txt", "a").write(gene+"\t"+gene_name+"\t"+knn_cv+"\t"+knn_n+"\t"+knn_w+"\t"+knn_p+"\t"+knn_tt+"\n")
+         trials = Trials() #reset the trials object
+         best = fmin(fn=objective, space=knn_space, algo=algo,
+                     max_evals=max_evals, trials=trials)
+         result_table = pd.DataFrame(trials.results)
+         best_hyperparam = hyperopt.space_eval(knn_space, best)
+         best_hyperparam.pop("type") #just to remove "type" from the param dict
+         
+         open("/home/pokoro/data/paper_hyperopt/"+pop+"_knn_hyperopt_chr"+
+              chrom+"_chunk"+chunk+".txt", "a").write("\n"+gene+"\t"+gene_name+"\t"+chrom+"\t"+str(best_hyperparam)+"\t")
 
-         #extract mean R2 score per gene per parameter
-         cv = pd.DataFrame(knngs.cv_results_)
-         for i in range(len(cv)):
-              open("/home/paul/mesa_models/python_ml_models/results/"+pop+"_knn_grid_parameter_per_gene_chr"+chrom+
-                   ".txt", "a").write("\n"+str(cv.params[i])+"\t"+gene+"\t"+gene_name+"\t"+chrom+"\t"+str(cv.mean_test_score[i])+"\t")
-"""
+         for i in range(0, max_evals, 1): #I negate the loss in order to get cvR2
+              open("/home/pokoro/data/paper_hyperopt/"+pop+"_knn_hyperopt_chr"+
+                   chrom+"_chunk"+chunk+".txt", "a").write(str(-1*result_table.loss[i])+"\t")
+
