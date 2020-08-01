@@ -31,10 +31,12 @@ parser = argparse.ArgumentParser()
 parser.add_argument("chr", action="store", help="put chromosome no")
 parser.add_argument("chunk", action="store", help="put chromosome chunk no")
 parser.add_argument("pop", action="store", help="specify population prefix")
+parser.add_argument("evals", action="store", help="specify number of evals")
 args = parser.parse_args()
 chrom = str(args.chr)
 chunk = str(args.chunk)
 pop = str(args.pop)
+max_evals= int(args.evals)
 
 #important functions needed
 def get_filtered_snp_annot (snpfilepath):
@@ -173,7 +175,7 @@ knn_space = {
 #3 choose hyperopt search algorithm
 algo = tpe.suggest #tpe = Tree-of-Parzen-Estimator
 #chose max eval
-max_evals= 30
+#max_evals= 30
 
 # Set file paths
 

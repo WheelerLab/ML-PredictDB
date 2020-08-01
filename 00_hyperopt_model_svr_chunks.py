@@ -180,7 +180,7 @@ algo = tpe.suggest #tpe = Tree-of-Parzen-Estimator
 # Set file paths
 
 snp_dosage_file = "/home/pokoro/data/mesa_models/"+pop.lower()+"/"+pop.upper()+"_"+chrom+"_snp.txt"
-gene_expression_file = "/home/pokoro/data/mesa_models/meqtl_sorted_"+pop.upper()+"_MESA_Epi_GEX_data_sidno_Nk-10.txt"
+gene_expression_file = "/home/pokoro/data/mesa_models/meqtl_sorted_AFA_MESA_Epi_GEX_data_sidno_Nk-10.txt"
 pc_file = "/home/pokoro/data/mesa_models/"+pop.lower()+"/"+pop.upper()+"_3_PCs.txt"
 gene_annotation_file = "/home/pokoro/data/mesa_models/gencode.v18.annotation.parsed.txt"
 snp_annotation_file = "/home/pokoro/data/mesa_models/"+pop.lower()+"/"+pop.upper()+"_"+chrom+"_annot.txt"
@@ -207,12 +207,12 @@ genes = snps_intersect(genes, gene_chunks)
 # prepare files where to write the results for each ML method
 
 #rf
-open("/home/pokoro/data/paper_hyperopt/RF/"+pop+"_rf_hyperopt_chr"+chrom+"_chunk"+
+open("/home/pokoro/data/paper_hyperopt/SVR/"+pop+"_svr_hyperopt_chr"+chrom+"_chunk"+
      chunk+".txt", "w").write("gene_id"+"\t"+"gene_name"+"\t"+"chr"+"\t"+
                               "best_hyperparam"+"\t")
 
 for i in range(0, max_evals, 1):
-     open("/home/pokoro/data/paper_hyperopt/RF/"+pop+"_rf_hyperopt_chr"+chrom+
+     open("/home/pokoro/data/paper_hyperopt/SVR/"+pop+"_svr_hyperopt_chr"+chrom+
           "_chunk"+chunk+".txt", "a").write(str(i)+"\t")
 
 
@@ -238,15 +238,16 @@ for gene in genes:
 
          #Random Forest
          trials = Trials() #reset the trials object
-         best = fmin(fn=objective, space=rf_space, algo=algo,
+         best = fmin(fn=objective, space=svm_space, algo=algo,
                      max_evals=max_evals, trials=trials)
          result_table = pd.DataFrame(trials.results)
-         best_hyperparam = hyperopt.space_eval(rf_space, best)
+         best_hyperparam = hyperopt.space_eval(svm_space, best)
          best_hyperparam.pop("type") #just to remove "type" from the param dict
          
-         open("/home/pokoro/data/paper_hyperopt/RF/"+pop+"_rf_hyperopt_chr"+
+         open("/home/pokoro/data/paper_hyperopt/SVR/"+pop+"_svr_hyperopt_chr"+
               chrom+"_chunk"+chunk+".txt", "a").write("\n"+gene+"\t"+gene_name+"\t"+chrom+"\t"+str(best_hyperparam)+"\t")
 
          for i in range(0, max_evals, 1): #I negate the loss in order to get cvR2
-              open("/home/pokoro/data/paper_hyperopt/RF/"+pop+"_rf_hyperopt_chr"+
+              open("/home/pokoro/data/paper_hyperopt/SVR/"+pop+"_svr_hyperopt_chr"+
                    chrom+"_chunk"+chunk+".txt", "a").write(str(-1*result_table.loss[i])+"\t")
+
