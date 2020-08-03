@@ -1,0 +1,25 @@
+---
+title: "Fig4_rho"
+author: "Paul Okoro"
+date: "March 31, 2020"
+output: html_document
+---
+
+```{r, fig.width=8,fig.height=10}
+library(dplyr)
+library(ggplot2)
+
+data <- read.table("Z:/ml_paper_figs/fig4df.txt",header=T,stringsAsFactors = F)
+#rearrange pop and ML order
+data <- mutate(data,pop=factor(pop,levels=c("ALL","AFHI","AFA","HIS","CAU")),MLmodel=factor(MLmodel,levels=c("RF","SVR","KNN")))
+fig <- ggplot(data,aes(x=ENrho,y=rho)) + geom_point(shape=".") + geom_abline(intercept=0, slope=1, color="blue") +
+  geom_smooth(method="lm", color="red", lwd=0.5) + xlim(-0.5,1) + ylim(-0.5,1) + 
+  xlab(expression(paste("Elastic Net ", rho))) + ylab(expression(paste("Machine Learning Model ", rho))) +
+  theme_bw(16) + facet_grid(pop~MLmodel) #xlim(0.1,1) + ylim(0.1,1) + old
+
+print(fig)
+
+tiff("/Users/okoro/OneDrive/Desktop/mesa_scripts/ml_paper_figs/Fig4.tiff", width = 16, height = 20, units = 'cm', res = 300, compression = 'lzw')
+fig
+dev.off()
+```
