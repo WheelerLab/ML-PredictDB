@@ -26,16 +26,23 @@ r2 = make_scorer(r2_score, greater_is_better=True)
 
 
 
-
 parser = argparse.ArgumentParser()
-parser.add_argument("chr", action="store", help="put chromosome no")
-parser.add_argument("chunk", action="store", help="put chromosome chunk no")
-parser.add_argument("pop", action="store", help="specify population prefix")
-parser.add_argument("evals", action="store", help="specify number of evals")
+parser.add_argument("--chr", action="store", dest="chr",
+                    help="specify the chromosome number")
+parser.add_argument("--training_pop", action="store", dest="training_pop",
+                    help="Imputation training population name")
+parser.add_argument("--output_dir", action="store", dest="output_dir",
+                    help="specify the output directory. Start and end with slash")
+parser.add_argument("--data_path", action="store", dest="data_path",
+                    help="Specify data path. Start and end with slash")
+parser.add_argument("--evals", action="store", dest="chr",
+                    help="specify the number of evals")
+
 args = parser.parse_args()
 chrom = str(args.chr)
-chunk = str(args.chunk)
-pop = str(args.pop)
+pop = str(args.training_pop)
+output = str(args.output_dir)
+data_path = str(args.data_path)
 max_evals= int(args.evals)
 
 #important functions needed
@@ -179,12 +186,17 @@ algo = tpe.suggest #tpe = Tree-of-Parzen-Estimator
 
 # Set file paths
 
-snp_dosage_file = "/home/pokoro/data/mesa_models/split_mesa/"+pop.upper()+"_chr"+chrom+"_genotype_chunk"+chunk+".txt"
-gene_expression_file = "/home/pokoro/data/mesa_models/split_mesa/"+pop.upper()+"_chr"+chrom+"_gex_chunk"+chunk+".txt"
-pc_file = "/home/pokoro/data/mesa_models/"+pop.lower()+"/"+pop.upper()+"_3_PCs.txt"
-gene_annotation_file = "/home/pokoro/data/mesa_models/gencode.v18.annotation.parsed.txt"
-snp_annotation_file = "/home/pokoro/data/mesa_models/"+pop.lower()+"/"+pop.upper()+"_"+chrom+"_annot.txt"
+#AFA_chr1.gz
+#AFA_GEX.gz
+#AFA_chr1_annot.gz
+#gencodev18.gz
+#AFA_3_PC.txt
 
+snp_dosage_file = data_path+pop.upper()+"_chr"+chrom+".txt"
+gene_expression_file = data_path+pop.upper()+"_GEX.txt"
+pc_file = data_path+pop.upper()+"_3_PCs.txt"
+gene_annotation_file = data_path+"/gencode.v18.annotation.parsed.txt"
+snp_annotation_file = data_path+pop.upper()+"_chr"+chrom+"_annot.txt"
 
 # parse the files
 
@@ -200,13 +212,13 @@ gt_df = get_maf_filtered_genotype(snp_dosage_file)
 
 
 #svr
-open("/home/pokoro/data/paper_hyperopt/"+pop+"_svr_hyperopt_chr"+chrom+"_chunk"+
-     chunk+".txt", "w").write("gene_id"+"\t"+"gene_name"+"\t"+"chr"+"\t"+
+open(output+pop+"_svr_hyperopt_chr"+chrom+
+     ".txt", "w").write("gene_id"+"\t"+"gene_name"+"\t"+"chr"+"\t"+
                               "best_hyperparam"+"\t")
 
 for i in range(0, max_evals, 1):
-     open("/home/pokoro/data/paper_hyperopt/"+pop+"_svr_hyperopt_chr"+chrom+
-          "_chunk"+chunk+".txt", "a").write(str(i)+"\t")
+     open(output+pop+"_svr_hyperopt_chr"+chrom+
+          ".txt", "a").write(str(i)+"\t")
 
 
 
@@ -238,9 +250,9 @@ for gene in genes:
          best_hyperparam = hyperopt.space_eval(svm_space, best)
          best_hyperparam.pop("type") #just to remove "type" from the param dict
          
-         open("/home/pokoro/data/paper_hyperopt/"+pop+"_svr_hyperopt_chr"+
-              chrom+"_chunk"+chunk+".txt", "a").write("\n"+gene+"\t"+gene_name+"\t"+chrom+"\t"+str(best_hyperparam)+"\t")
+         open(output+pop+"_svr_hyperopt_chr"+
+              chrom+".txt", "a").write("\n"+gene+"\t"+gene_name+"\t"+chrom+"\t"+str(best_hyperparam)+"\t")
 
          for i in range(0, max_evals, 1): #I negate the loss in order to get cvR2
-              open("/home/pokoro/data/paper_hyperopt/"+pop+"_svr_hyperopt_chr"+
-                   chrom+"_chunk"+chunk+".txt", "a").write(str(-1*result_table.loss[i])+"\t")
+              open(output+pop+"_svr_hyperopt_chr"+
+                   chrom+".txt", "a").write(str(-1*result_table.loss[i])+"\t")

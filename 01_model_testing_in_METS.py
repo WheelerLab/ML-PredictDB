@@ -19,12 +19,29 @@ from sklearn.linear_model import ElasticNet
 import gzip
 
 parser = argparse.ArgumentParser()
-parser.add_argument("chr", action="store", help="put chromosome no")
-args = parser.parse_args() #22
-chrom = args.chr
-chrom = str(chrom)
-pop = "METS"
+parser.add_argument("--chr", action="store", dest="chr",
+                    help="specify the chromosome number")
+parser.add_argument("--training_pop", action="store", dest="training_pop",
+                    help="Imputation training population name")
+parser.add_argument("--testing_pop", action="store", dest="testing_pop",
+                    help="Imputation testing population name")
+parser.add_argument("--output_dir", action="store", dest="output_dir",
+                    help="specify the output directory. Start and end with slash")
+parser.add_argument("--trn_data_path", action="store", dest="trn_data_path",
+                    help="Specify train data path. Start and end with slash")
+parser.add_argument("--tst_data_path", action="store", dest="tst_data_path",
+                    help="Specify test data path. Start and end with slash")
+parser.add_argument("--param_file_path", action="store", dest="param_file_path",
+                    help="Specify path to the gridsearch hyperparameter files")
 
+args = parser.parse_args()
+chrom = str(args.chr)
+trn_pop = str(args.training_pop)
+tst_pop = str(args.testing_pop)
+output = str(args.output_dir)
+trn_data_path = str(args.trn_data_path)
+tst_data_path = str(args.tst_data_path)
+param_file_path = str(args.param_file_path)
 
 #important functions needed
 def get_filtered_snp_annot (snpfilepath):
@@ -86,7 +103,7 @@ def adjust_for_covariates (expr_vec, cov_df):
       residuals = scale(residuals)
       return residuals
 
-def get_maf_filtered_genotype(genotype_file_name,  maf):
+def get_maf_filtered_genotype(genotype_file_name,  maf=0.01):
 	gt_df = pd.read_csv(genotype_file_name, 'r', header = 0, index_col = 0,delimiter='\t')
 	effect_allele_freqs = gt_df.mean(axis=1)
 	effect_allele_freqs = [ x / 2 for x in effect_allele_freqs ]
@@ -113,23 +130,29 @@ def snps_intersect(list1, list2):
 
 
 #train data files
-afa_snp = "/home/pokoro/data/mesa_models/cau/CAU_"+str(chrom)+"_snp.txt"
-gex = "/home/pokoro/data/mesa_models/meqtl_sorted_CAU_MESA_Epi_GEX_data_sidno_Nk-10.txt"
-cov_file = "/home/pokoro/data/mesa_models/cau/CAU_3_PCs.txt"
-geneanotfile = "/home/pokoro/data/mesa_models/gencode.v18.annotation.parsed.txt"
-snpfilepath = "/home/pokoro/data/mesa_models/cau/CAU_"+str(chrom)+"_annot.txt"
+#AFA_chr1.gz
+#AFA_GEX.gz
+#AFA_chr1_annot.gz
+#gencodev18.gz
+#AFA_3_PC.txt
+snp_dosage_file = trn_data_path+trn_pop.upper()+"_chr"+chrom+".txt"
+gene_expression_file = trn_data_path+trn_pop.upper()+"_GEX.txt"
+pc_file = trn_data_path+trn_pop.upper()+"_3_PCs.txt"
+gene_annotation_file = trn_data_path+"/gencode.v18.annotation.parsed.txt"
+snp_annotation_file = trn_data_path+trn_pop.upper()+"_chr"+chrom+"_annot.txt"
+
 
 #test data files
-test_snp = "/home/pokoro/data/METS_model/hg19/METS_"+str(chrom)+"_snp.txt"
-test_gex = "/home/pokoro/data/METS_model/hg19/METS_peer10_all_chr_prot_coding_gex.txt"
-test_covfile = "/home/pokoro/data/METS_model/hg19/METS_3_PCs.txt"
-test_snpfile = "/home/pokoro/data/METS_model/hg19/METS_"+str(chrom)+"_annot.txt"
-gencodev28 = "/home/pokoro/data/METS_model/hg19/gencode.v28_annotation.parsed.txt"
+test_snp_dosage_file = tst_data_path+tst_pop.upper()+"_chr"+chrom+".txt"
+test_gene_expression_file = tst_data_path+tst_pop.upper()+"_GEX.txt"
+test_pc_file = tst_data_path+tst_pop.upper()+"_3_PCs.txt"
+test_gene_annotation_file = tst_data_path+"/gencode.v28.annotation.parsed.txt"
+test_snp_annotation_file = tst_data_path+tst_pop.upper()+"_chr"+chrom+"_annot.txt"
 
 #train functioning
-snpannot = get_filtered_snp_annot(snpfilepath)
-geneannot = get_gene_annotation(geneanotfile, chrom)
-expr_df = get_gene_expression(gex, geneannot) #this had to created early to avoid empty df downstream
+snpannot = get_filtered_snp_annot(snp_annotation_file)
+geneannot = get_gene_annotation(gene_annotation_file, chrom)
+expr_df = get_gene_expression(gene_expression_file, geneannot) #this had to created early to avoid empty df downstream
 annot_geneid = geneannot["gene_id"]#remove decimal from gene_id
 annot_geneid = list(annot_geneid)
 agid = []
@@ -137,10 +160,10 @@ for i in annot_geneid:
 	agid.append(i[0:(i.find("."))])
 geneannot["gene_id"] = agid #replace with non decimal gene_id
 
-cov = get_covariates(cov_file)
+cov = get_covariates(pc_file)
 
 genes = list(expr_df.columns)
-gt_df = get_maf_filtered_genotype(afa_snp, 0.01)
+gt_df = get_maf_filtered_genotype(snp_dosage_file)
 train_ids = list(gt_df.index)
 train_g = [] #where to store the non decimal gene_id
 for i in genes:
@@ -151,9 +174,9 @@ genes = list(expr_df.columns) #take out the new non decimal gene_id
 
 
 #test functioning
-test_snpannot = get_filtered_snp_annot(test_snpfile)
-test_geneannot = get_gene_annotation(gencodev28, chrom)
-test_expr_df = get_gene_expression(test_gex, test_geneannot) #important to create early
+test_snpannot = get_filtered_snp_annot(test_snp_annotation_file)
+test_geneannot = get_gene_annotation(test_gene_annotation_file, chrom)
+test_expr_df = get_gene_expression(test_gene_expression_file, test_geneannot) #important to create early
 test_annot_geneid = test_geneannot["gene_id"]#remove decimal from gene_id
 test_annot_geneid = list(test_annot_geneid)
 test_agid = []
@@ -161,10 +184,10 @@ for i in test_annot_geneid:
 	test_agid.append(i[0:(i.find("."))])
 test_geneannot["gene_id"] = test_agid #replace with non decimal gene_id
 
-test_cov = get_covariates(test_covfile)
+test_cov = get_covariates(test_pc_file)
 
 test_genes = list(test_expr_df.columns)
-test_gt_df = get_maf_filtered_genotype(test_snp, 0.01)
+test_gt_df = get_maf_filtered_genotype(test_snp_dosage_file)
 test_ids = list(test_gt_df.index)
 test_g = []
 for i in test_genes:
@@ -179,28 +202,28 @@ ypred_frame_knn = pd.DataFrame()
 
 
 #read in the grid search best result files and take the params to fit the model
-rf_grid = pd.read_csv("/home/pokoro/data/mesa_models/python_ml_models/merged_chunk_results/CAU_best_grid_rf_chr"+chrom+
+rf_grid = pd.read_csv(param_file_path+trn_pop.upper()+"_best_grid_rf_chr"+chrom+
                       "_full.txt", sep="\t")
 
-knn_grid = pd.read_csv("/home/pokoro/data/mesa_models/python_ml_models/merged_chunk_results/CAU_best_grid_knn_chr"+chrom+
+knn_grid = pd.read_csv(param_file_path+trn_pop.upper()+"_best_grid_knn_chr"+chrom+
                        "_full.txt", sep="\t")
 
-svr_grid = pd.read_csv("/home/pokoro/data/mesa_models/python_ml_models/merged_chunk_results/CAU_best_grid_svr_chr"+chrom+
+svr_grid = pd.read_csv(param_file_path+trn_pop.upper()+"_best_grid_svr_chr"+chrom+
                        "_full.txt", sep="\t")
 
 
 #text file where to write out the cv and test results
-open("/home/pokoro/data/mesa_models/python_ml_models/results/grid_optimized_CAU_2_"+pop+"_rf_cor_test_chr"+str(chrom)+
+open(output+"grid_optimized_"+trn_pop.upper()+"_2_"+tst_pop.upper()+"_rf_cor_test_chr"+str(chrom)+
      ".txt", "w").write("gene_id"+"\t"+"gene_name"+"\t"+"pearson_yadj_vs_ypred (a)"+"\t"+"a_pval"+
                         "\t"+"pearson_yobs_vs_ypred (b)"+"\t"+"b_pval"+"\t"+"spearman_yadj_vs_ypred (c)"+
                         "\t"+"c_pval"+"\t"+"spearman_yobs_vs_ypred (d)"+"\t"+"d_pval"+"\n")
 
-open("/home/pokoro/data/mesa_models/python_ml_models/results/grid_optimized_CAU_2_"+pop+"_knn_cor_test_chr"+str(chrom)+
+open(output+"grid_optimized_"+trn_pop.upper()+"_2_"+tst_pop.upper()+"_knn_cor_test_chr"+str(chrom)+
      ".txt", "w").write("gene_id"+"\t"+"gene_name"+"\t"+"pearson_yadj_vs_ypred (a)"+"\t"+"a_pval"+"\t"+
                         "pearson_yobs_vs_ypred (b)"+"\t"+"b_pval"+"\t"+"spearman_yadj_vs_ypred (c)"+"\t"+"c_pval"+"\t"+
                         "spearman_yobs_vs_ypred (d)"+"\t"+"d_pval"+"\n")
 
-open("/home/pokoro/data/mesa_models/python_ml_models/results/grid_optimized_CAU_2_"+pop+"_svr_cor_test_chr"+str(chrom)+
+open(output+"grid_optimized_"+trn_pop.upper()+"_2_"+tst_pop.upper()+"_svr_cor_test_chr"+str(chrom)+
      ".txt", "w").write("gene_id"+"\t"+"gene_name"+"\t"+"pearson_yadj_vs_ypred (a)"+"\t"+"a_pval"+"\t"+
                         "pearson_yobs_vs_ypred (b)"+"\t"+"b_pval"+"\t"+"spearman_yadj_vs_ypred (c)"+"\t"+"c_pval"+"\t"+
                         "spearman_yobs_vs_ypred (d)"+"\t"+"d_pval"+"\n")
@@ -274,7 +297,7 @@ for gene in genes:
                        sd = stats.spearmanr(test_yobs, ypred)
                        sdcoef = str(float(sd[0]))
                        sdpval = str(float(sd[1]))
-                       open("/home/pokoro/data/mesa_models/python_ml_models/results/grid_optimized_CAU_2_"+pop+
+                       open(output+"grid_optimized_"+trn_pop.upper()+"_2_"+tst_pop.upper()+
                             "_rf_cor_test_chr"+str(chrom)+".txt", "a").write(gene+"\t"+gene_name+"\t"+pacoef+"\t"
                                                                              +papval+"\t"+pbcoef+"\t"+pbpval+"\t"+sccoef+
                                                                              "\t"+scpval+"\t"+sdcoef+"\t"+sdpval+"\n")
@@ -310,7 +333,7 @@ for gene in genes:
                        sd = stats.spearmanr(test_yobs, ypred)
                        sdcoef = str(float(sd[0]))
                        sdpval = str(float(sd[1]))
-                       open("/home/pokoro/data/mesa_models/python_ml_models/results/grid_optimized_CAU_2_"+pop+
+                       open(output+"grid_optimized_"+trn_pop.upper()+"_2_"+tst_pop.upper()+
                             "_svr_cor_test_chr"+str(chrom)+".txt", "a").write(gene+"\t"+gene_name+"\t"+pacoef+
                                                                               "\t"+papval+"\t"+pbcoef+"\t"+pbpval+"\t"+sccoef+
                                                                               "\t"+scpval+"\t"+sdcoef+"\t"+sdpval+"\n")
@@ -346,19 +369,19 @@ for gene in genes:
                        sd = stats.spearmanr(test_yobs, ypred)
                        sdcoef = str(float(sd[0]))
                        sdpval = str(float(sd[1]))
-                       open("/home/pokoro/data/mesa_models/python_ml_models/results/grid_optimized_CAU_2_"+pop+
+                       open(output+"grid_optimized_"+trn_pop.upper()+"_2_"+tst_pop.upper()+
                             "_knn_cor_test_chr"+str(chrom)+".txt", "a").write(gene+"\t"+gene_name+"\t"+pacoef+"\t"+papval+"\t"+pbcoef+
                                                                               "\t"+pbpval+"\t"+sccoef+"\t"+scpval+"\t"+sdcoef+
                                                                               "\t"+sdpval+"\n")
 
         
 
-ypred_frame_rf.to_csv("/home/pokoro/data/mesa_models/python_ml_models/results/grid_optimized_CAU_2_"+pop+
+ypred_frame_rf.to_csv(output+"grid_optimized_"+trn_pop.upper()+"_2_"+tst_pop.upper()+
                       "_rf_predicted_gene_expr_chr"+str(chrom)+".txt", header=True, index=True, sep="\t")
 
-ypred_frame_svr.to_csv("/home/pokoro/data/mesa_models/python_ml_models/results/grid_optimized_CAU_2_"+pop+
+ypred_frame_svr.to_csv(output+"grid_optimized_"+trn_pop.upper()+"_2_"+tst_pop.upper()+
                        "_svr_rbf_predicted_gene_expr_chr"+str(chrom)+".txt", header=True, index=True, sep="\t")
 
-ypred_frame_knn.to_csv("/home/pokoro/data/mesa_models/python_ml_models/results/grid_optimized_CAU_2_"+pop+
+ypred_frame_knn.to_csv(output+"grid_optimized_"+trn_pop.upper()+"_2_"+tst_pop.upper()+
                        "_knn_predicted_gene_expr_chr"+str(chrom)+".txt", header=True, index=True, sep="\t")
 
