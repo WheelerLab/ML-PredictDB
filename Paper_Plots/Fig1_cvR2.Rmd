@@ -2,24 +2,26 @@
 title: "Fig1_cvR2"
 author: "Heather Wheeler"
 date: "`r Sys.time()`"
-output: html_document
+output:
+  html_document: default
+  pdf_document: default
 ---
 
 ```{r,fig.width=8,fig.height=10}
 library(dplyr)
 library(ggplot2)
 
-data <- read.table("fig1df.txt",header=T,stringsAsFactors = F)
+data <- read.table(file="Z:/ml_paper_figs/fig1df.txt",header=T,stringsAsFactors = F)
 #rearrange pop and ML order
 data <- mutate(data,pop=factor(pop,levels=c("ALL","AFA","HIS","CAU")),MLmodel=factor(MLmodel,levels=c("RF","SVR","KNN")))
 fig <- ggplot(data,aes(x=ENcvR2,y=cvR2)) + geom_point(shape=".") + geom_abline(intercept=0, slope=1, color="blue") +
   geom_smooth(method="lm", color="red", lwd=0.5) + xlim(-0.5,1) + ylim(-0.5,1) + 
-  xlab(expression(paste("Elastic Net ", R^{2}))) + ylab(expression(paste("Machine Learning Model ", R^{2}))) +
+  xlab(expression(paste("Elastic Net ", R^{2}))) + ylab(expression(paste("Other Machine Learning Model ", R^{2}))) +
   theme_bw(16) + facet_grid(pop~MLmodel) 
 
 print(fig)
 
-tiff("Fig1.tiff", width = 16, height = 20, units = 'cm', res = 300, compression = 'lzw')
+tiff("Z:/ml_paper_figs/Fig1.tiff", width = 16, height = 20, units = 'cm', res = 300, compression = 'lzw')
 fig
 dev.off()
 ```
