@@ -5,121 +5,6 @@ library(dplyr)
 library(ggplot2)
 "%&%" <- function(a,b) paste(a,b, sep = "")
 
-#Elastic Net
-en <- NULL
-for (chrom in 1:22) {
-  no <- as.character(chrom)
-  for (chunk in 1:5) {
-    en <- rbind(en, read.table(file="Z:/data/paper_hyperopt/max_evals_30/afa_en_hyperopt_chr" %&% no %&% "_chunk" %&% chunk %&% ".txt", header=T, sep="\t"))
-  }
-}
-en$X <- NULL
-en <- en[,c(1,34)]
-en <- subset(en, X29 > -0.5)
-names(en) <- c("gene_id", "cvr2")
-
-
-#Random Forest, chr22
-rf <- NULL
-for (chrom in 22:22) {
-  no <- as.character(chrom)
-  for (chunk in 1:22) {
-    rf <- rbind(rf, read.table(file="Z:/data/paper_hyperopt/RF/max_evals_30/afa_rf_hyperopt_chr" %&% no %&% "_chunk" %&% chunk %&% ".txt", header=T, sep="\t"))
-  }
-}
-rf$X <- NULL
-rf <- rf[,c(1,34)]
-rf <- subset(rf, X29 > -0.5)
-names(rf) <- c("gene_id", "cvr2")
-
-
-#SVR
-svr <- NULL
-for (chrom in 1:22) {
-  no <- as.character(chrom)
-  for (chunk in 1:5) {
-    svr <- rbind(svr, read.table(file="Z:/data/paper_hyperopt/max_evals_30/afa_svr_hyperopt_chr" %&% no %&% "_chunk" %&% chunk %&% ".txt", header=T, sep="\t"))
-  }
-}
-svr$X <- NULL
-svr <- svr[,c(1,34)]
-svr <- subset(svr, X29 > -0.5)
-names(svr) <- c("gene_id", "cvr2")
-
-
-#KNN
-knn <- NULL
-for (chrom in 1:22) {
-  no <- as.character(chrom)
-  for (chunk in 1:5) {
-    knn <- rbind(knn, read.table(file="Z:/data/paper_hyperopt/max_evals_30/afa_knn_hyperopt_chr" %&% no %&% "_chunk" %&% chunk %&% ".txt", header=T, sep="\t"))
-  }
-}
-knn$X <- NULL
-knn <- knn[,c(1,34)]
-knn <- subset(knn, X29 > -0.5)
-names(knn) <- c("gene_id", "cvr2")
-
-
-#compare the hyperopts of EN against RF, SVR or KNN
-
-#RF
-enrf <- inner_join(en, rf, by = c("gene_id"="gene_id"))
-names(enrf) <- c("gene", "EN", "RF")
-enrf <- subset(enrf, (EN>-0.5 & RF>-0.5)) #9441
-ggplot(data = enrf, aes(x=EN, y=RF)) + geom_point() + geom_point() + theme_bw(24) + 
-  geom_abline(intercept=0, slope=1, color="blue") + 
-  geom_smooth(method="lm", color="red", lwd=0.5)
-
-#SVR
-ensvr <- inner_join(en, svr, by = c("gene_id"="gene_id"))
-names(ensvr) <- c("gene", "EN", "SVR")
-ensvr <- subset(ensvr, (EN>-0.5 & SVR>-0.5)) #9441
-ggplot(data = ensvr, aes(x=EN, y=SVR)) + geom_point() + geom_point() + theme_bw(24) + 
-  geom_abline(intercept=0, slope=1, color="blue") + 
-  geom_smooth(method="lm", color="red", lwd=0.5)
-
-
-#KNN
-enknn <- inner_join(en, knn, by = c("gene_id"="gene_id"))
-names(enknn) <- c("gene", "EN", "KNN")
-enknn <- subset(enknn, (EN>-0.5 & KNN>-0.5)) #9441
-ggplot(data = enknn, aes(x=EN, y=KNN)) + geom_point() + geom_point() + theme_bw(24) + 
-  geom_abline(intercept=0, slope=1, color="blue") + 
-  geom_smooth(method="lm", color="red", lwd=0.5)
-
-
-#Make df
-#AFA
-
-endf <- mutate(en, model="EN", pop="AFA")
-rfdf <- mutate(rf, model="RF", pop="AFA")
-svrdf <- mutate(svr, model="SVR", pop="AFA")
-knndf <- mutate(knn, model="KNN", pop="AFA")
-
-#df <- rbind(endf, rfdf, svrdf, knndf)
-enrf <- inner_join(endf,rfdf,by=c("gene_id","pop"))
-ensvr <- inner_join(endf,svrdf,by=c("gene_id","pop"))
-enknn <- inner_join(endf,knndf,by=c("gene_id","pop"))
-
-df <- rbind(enrf, ensvr, enknn)
-colnames(df) <- c("gene", "ENcvR2", "EN", "pop", "cvR2", "MLmodel")
-
-data <- mutate(df,pop=factor(pop,levels=c("AFA")),MLmodel=factor(MLmodel,levels=c("RF","SVR","KNN")))
-
-tiff("/Users/okoro/OneDrive/Desktop/FigS6.tiff", width = 16, height = 20, units = 'cm', res = 300, compression = 'lzw')
-
-ggplot(data,aes(x=ENcvR2,y=cvR2)) + geom_point(shape=".") + geom_abline(intercept=0, slope=1, color="blue") +
-  geom_smooth(method="lm", color="red", lwd=0.5) + xlim(-0.5,1) + ylim(-0.5,1) + 
-  xlab(expression(paste("Elastic Net ", R^{2}))) + ylab(expression(paste("Machine Learning Model   ", R^{2}))) +
-  theme_bw(16) + facet_grid(pop~MLmodel) 
-
-dev.off()
-
-
-
-
-
 ######
 #AFA
 
@@ -355,11 +240,11 @@ colnames(df) <- c("gene", "ENcvR2", "EN", "pop", "cvR2", "MLmodel")
 data <- select(df, gene, ENcvR2, MLmodel, cvR2, pop)
 data <- mutate(data,pop=factor(pop,levels=c("AFA","HIS","CAU")),MLmodel=factor(MLmodel,levels=c("RF","SVR","KNN")))
 
-tiff("/Users/okoro/OneDrive/Desktop/FigS2.tiff", width = 16, height = 20, units = 'cm', res = 300, compression = 'lzw')
+tiff("/Users/okoro/OneDrive/Desktop/ML-PredictDB/Paper_Plots/FigS3.tiff", width = 16, height = 20, units = 'cm', res = 300, compression = 'lzw')
 
 ggplot(data,aes(x=ENcvR2,y=cvR2)) + geom_point(shape=".") + geom_abline(intercept=0, slope=1, color="blue") +
   geom_smooth(method="lm", color="red", lwd=0.5) + xlim(-0.5,1) + ylim(-0.5,1) + 
-  xlab(expression(paste("Elastic Net ", R^{2}))) + ylab(expression(paste("Machine Learning Model ", R^{2}))) +
+  xlab(expression(paste("Elastic Net ", R^{2}))) + ylab(expression(paste("Other Machine Learning Model ", R^{2}))) +
   theme_bw(16) + facet_grid(pop~MLmodel) 
 
 #tiff("Fig1.tiff", width = 16, height = 20, units = 'cm', res = 300, compression = 'lzw')
