@@ -375,13 +375,3 @@ for gene in genes:
                                                                               "\t"+sdpval+"\n")
 
         
-
-ypred_frame_rf.to_csv(output+"grid_optimized_"+trn_pop.upper()+"_2_"+tst_pop.upper()+
-                      "_rf_predicted_gene_expr_chr"+str(chrom)+".txt", header=True, index=True, sep="\t")
-
-ypred_frame_svr.to_csv(output+"grid_optimized_"+trn_pop.upper()+"_2_"+tst_pop.upper()+
-                       "_svr_rbf_predicted_gene_expr_chr"+str(chrom)+".txt", header=True, index=True, sep="\t")
-
-ypred_frame_knn.to_csv(output+"grid_optimized_"+trn_pop.upper()+"_2_"+tst_pop.upper()+
-                       "_knn_predicted_gene_expr_chr"+str(chrom)+".txt", header=True, index=True, sep="\t")
-
