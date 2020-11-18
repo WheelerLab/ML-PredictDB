@@ -320,14 +320,3 @@ for gene in genes:
                 ypred_pd.index = test_ids
                 ypred_frame_knn = pd.concat([ypred_frame_knn, ypred_pd], axis=1, sort=True)
                        
-                       
-        
-
-ypred_frame_rf.to_csv(output+tst_pop.upper()+"_chr"+chrom+
-                      "_rf_bestorder.txt", header=True, index=True, sep="\t")
-
-ypred_frame_svr.to_csv(output+tst_pop.upper()+"_chr"+chrom+
-                       "_svr_bestorder.txt", header=True, index=True, sep="\t")
-
-ypred_frame_knn.to_csv(output+tst_pop.upper()+"_chr"+chrom+
-                       "_knn_bestorder.txt", header=True, index=True, sep="\t")
